@@ -8,7 +8,7 @@ void print_node(std::shared_ptr<rapidxml_adapter::xml_node<Ch>> _node, int _tab_
     {
         return;
     }
-    std::cout << std::string(_tab_num * 2, ' ') << _node->name() << ":" << _node->value();
+    std::cout << std::string(_tab_num * 2, ' ') << "[" << _node->type() << "]" << _node->name() << ":" << _node->value();
     rapidxml_adapter::xml_attribute_list<Ch> attribute_list = _node->attributes();
     for(std::shared_ptr<rapidxml_adapter::xml_attribute<Ch>> attribute : attribute_list)
     {

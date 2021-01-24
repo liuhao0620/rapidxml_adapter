@@ -95,7 +95,7 @@ namespace rapidxml_adapter
 	class xml_node : public xml_base<Ch>
 	{
 	public:
-		xml_node(rapidxml::node_type _type)
+		xml_node(rapidxml::node_type _type = static_cast<rapidxml::node_type>(-1))
 			: xml_base<Ch>()
 			, m_type(_type)
 			, m_children()
@@ -108,6 +108,11 @@ namespace rapidxml_adapter
 			, m_children()
 			, m_attributes()
 		{
+		}
+
+		rapidxml::node_type type() const
+		{
+			return m_type;
 		}
 
 		xml_node_list<Ch> children(const string<Ch>& _name = string<Ch>(), bool _case_sensitive = true) const
