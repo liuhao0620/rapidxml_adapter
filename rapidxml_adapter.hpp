@@ -71,9 +71,9 @@ namespace rapidxml_adapter
 		{
 		}
 
-	protected:
-		string<Ch>				m_name;
-		string<Ch>				m_value;
+	private:
+		string<Ch>					m_name;
+		string<Ch>					m_value;
 		std::weak_ptr<xml_node<Ch>>	m_parent;
 	};
 
@@ -115,6 +115,37 @@ namespace rapidxml_adapter
 			return m_type;
 		}
 
+		std::shared_ptr<xml_document<Ch>> document() const
+		{
+			std::shared_ptr<xml_node<Ch>> node = shared_ptr_of_this();
+			std::shared_ptr<xml_node<Ch>> temp = node;
+			while(temp = temp->parent())
+			{
+				node = temp;
+			}
+			return node->type() == rapidxml::node_document ? std::static_pointer_cast<xml_document<Ch>>(node) : std::shared_ptr<xml_document<Ch>>();
+		}
+
+		std::shared_ptr<xml_node<Ch>> first_node(const string<Ch>& _name = string<Ch>(), bool _case_sensitive = true) const
+		{
+
+		}
+
+		std::shared_ptr<xml_node<Ch>> last_node(const string<Ch>& _name = string<Ch>(), bool _case_sensitive = true) const
+		{
+
+		}
+		
+		std::shared_ptr<xml_attribute<Ch>> first_attribute(const string<Ch>& _name = string<Ch>(), bool _case_sensitive = true) const
+		{
+
+		}
+
+		std::shared_ptr<xml_attribute<Ch>> last_attribute(const string<Ch>& _name = string<Ch>(), bool _case_sensitive = true) const
+		{
+
+		}
+
 		xml_node_list<Ch> children(const string<Ch>& _name = string<Ch>(), bool _case_sensitive = true) const
 		{
 			if (_name.empty())
@@ -149,6 +180,138 @@ namespace rapidxml_adapter
 			return attribute_list;
 		}
 
+		void type(rapidxml::node_type _type)
+		{
+			m_type = _type;
+		}
+
+		void prepend_node(std::shared_ptr<xml_node<Ch>> _child)
+		{
+			assert(_child && !_child->parent() && _child->type() != rapidxml::node_document);
+			_child->m_parent = shared_ptr_of_this();
+			m_children.emplace_front(_child);
+		}
+
+		void append_node(std::shared_ptr<xml_node<Ch>> _child)
+		{
+			assert(_child && !_child->parent() && _child->type() != rapidxml::node_document);
+			_child->m_parent = shared_ptr_of_this();
+			m_children.emplace_back(_child);
+		}
+
+		void insert_node(std::shared_ptr<xml_node<Ch>> _where, std::shared_ptr<xml_node<Ch>> _child)
+		{
+			assert(!_where || _where->parent() == shared_ptr_of_this());
+			assert(_child && !_child->parent() && _child->type() != rapidxml::node_document);
+			if (!_where)
+			{
+				append_node(_child);
+			}
+			else
+			{
+				for (auto iter = m_children.begin(); iter != m_children.end(); ++ iter)
+				{
+					if ((*iter) == _where)
+					{
+						m_children.emplace(iter, _child);
+						break;
+					}
+				}
+			}
+		}
+
+		void remove_first_node()
+		{
+			assert(m_children.size() > 0);
+			m_children.pop_front();
+		}
+
+		void remove_last_node()
+		{
+			assert(m_children.size() > 0);
+			m_children.pop_back();
+		}
+
+		void remove_node(std::shared_ptr<xml_node<Ch>> _where)
+		{
+			assert(_where && _where->parent() == shared_ptr_of_this());
+			for (auto iter = m_children.begin(); iter != m_children.end(); ++ iter)
+			{
+				if ((*iter) == _where)
+				{
+					m_children.erase(iter);
+					break;
+				}
+			}
+		}
+
+		void remove_all_nodes()
+		{
+			m_children.clear();
+		}
+
+		void prepend_attribute(std::shared_ptr<xml_attribute<Ch>> _attribute)
+		{
+			assert(_attribute && !_attribute->parent());
+			m_attributes.emplace_front(_attribute);
+		}
+
+		void append_attribute(std::shared_ptr<xml_attribute<Ch>> _attribute)
+		{
+			assert(_attribute && !_attribute->parent());
+			m_attributes.emplace_back(_attribute);
+		}
+
+		void insert_attribute(std::shared_ptr<xml_attribute<Ch>> _where, std::shared_ptr<xml_attribute<Ch>> _attribute)
+		{
+			assert(!_where || _where->parent() == shared_ptr_of_this());
+			assert(_attribute && !_attribute->parent());
+			if (!_where)
+			{
+				append_attribute(_attribute);
+			}
+			else
+			{
+				for(auto iter = m_attributes.begin(); iter != m_attributes.end(); ++ iter)
+				{
+					if ((*iter) == _where)
+					{
+						m_attributes.insert(iter, _attribute);
+						break;
+					}
+				}
+			}
+		}
+
+		void remove_first_attribute()
+		{
+			assert(m_attributes.size() > 0);
+			m_attributes.pop_front();
+		}
+
+		void remove_last_attribute()
+		{
+			assert(m_attributes.size() > 0);
+			m_attributes.pop_back();
+		}
+
+		void remove_attribute(std::shared_ptr<xml_attribute<Ch>> _where)
+		{
+			assert(_where && _where->parent() == shared_ptr_of_this());
+			for(auto iter = m_attributes.begin(); iter != m_attributes.end(); ++iter)
+			{
+				if((*iter) == _where)
+				{
+					m_attributes.erase(iter);
+					break;
+				}
+			}
+		}
+
+		void remove_all_attributes()
+		{
+			m_attributes.clear();
+		}
 	protected:
 		void convert_from_rapidxml_node(const rapidxml::xml_node<Ch>* _node)
 		{
@@ -168,7 +331,7 @@ namespace rapidxml_adapter
 		{
 			return std::static_pointer_cast<xml_node<Ch>>(xml_base<Ch>::shared_from_this());
 		}
-	protected:
+	private:
 		rapidxml::node_type		m_type;
 		xml_node_list<Ch>		m_children;
 		xml_attribute_list<Ch>	m_attributes;
@@ -193,8 +356,8 @@ namespace rapidxml_adapter
 
 		void clear()
 		{
-			xml_node<Ch>::m_children.clear();
-			xml_node<Ch>::m_attributes.clear();
+			xml_node<Ch>::remove_all_nodes();
+			xml_node<Ch>::remove_all_attributes();
 		}
 	};
 }
