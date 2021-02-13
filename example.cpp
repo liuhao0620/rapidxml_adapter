@@ -127,6 +127,106 @@ int main()
 
   assert(ss.str() == ss2.str());
 
+  {
+    // test remove
+    std::shared_ptr<xml_node<>> root = doc2->first_node();
+
+    std::shared_ptr<xml_node<>> roles = root->first_node();
+    assert(roles->children().size() == 4);
+    {
+      std::shared_ptr<xml_node<>> wanger;
+      {
+        auto children = roles->children();
+        auto iter = children.begin();
+        ++ iter;
+        ++ iter;
+        wanger = *iter;
+      }
+      assert(wanger->parent() == roles);
+      assert(wanger->value() == "wanger");
+      roles->remove_node(wanger);
+      assert(!wanger->parent());
+      assert(roles->children().size() == 3);
+      for (std::shared_ptr<xml_node<>> node : roles->children())
+      {
+        assert(node->value() != "wanger");
+      }
+    }
+
+    {
+      std::shared_ptr<xml_node<>> zhangsan = roles->first_node();
+      assert(zhangsan->parent() == roles);
+      assert(zhangsan->value() == "zhangsan");
+      roles->remove_first_node();
+      assert(!zhangsan->parent());
+      assert(roles->children().size() == 2);
+      assert(roles->first_node()->value() == "lisi");
+    }
+
+    {
+      std::shared_ptr<xml_node<>> mazi = roles->last_node();
+      assert(mazi->parent() == roles);
+      assert(mazi->value() == "mazi");
+      roles->remove_last_node();
+      assert(!mazi->parent());
+      assert(roles->children().size() == 1);
+      assert(roles->last_node()->value() == "lisi");
+    }
+    
+    {
+      std::shared_ptr<xml_node<>> lisi = roles->first_node();
+      assert(lisi->parent() == roles);
+      assert(lisi->value() == "lisi");
+      roles->remove_all_nodes();
+      assert(!lisi->parent());
+      assert(roles->children().size() == 0);
+    }
+
+    assert(root->attributes().size() == 4);
+    {
+      std::shared_ptr<xml_attribute<>> attr1 = root->first_attribute("attr1");
+      assert(attr1->parent() == root);
+      assert(attr1->name() == "attr1");
+      assert(attr1->value() == "1");
+      root->remove_attribute(attr1);
+      assert(!attr1->parent());
+      assert(root->attributes().size() == 3);
+      assert(!root->first_attribute("attr1"));
+    }
+
+    {
+      std::shared_ptr<xml_attribute<>> attr3 = root->first_attribute();
+      assert(attr3->parent() == root);
+      assert(attr3->name() == "attr3");
+      assert(attr3->value() == "3");
+      root->remove_first_attribute();
+      assert(!attr3->parent());
+      assert(root->attributes().size() == 2);
+      assert(!root->first_attribute("attr3"));
+    }
+
+    {
+      std::shared_ptr<xml_attribute<>> attr2 = root->last_attribute();
+      assert(attr2->parent() == root);
+      assert(attr2->name() == "attr2");
+      assert(attr2->value() == "2");
+      root->remove_last_attribute();
+      assert(!attr2->parent());
+      assert(root->attributes().size() == 1);
+      assert(!root->first_attribute("attr2"));
+    }
+
+    {
+      std::shared_ptr<xml_attribute<>> attr4 = root->first_attribute();
+      assert(attr4->parent() == root);
+      assert(attr4->name() == "attr4");
+      assert(attr4->value() == "4");
+      root->remove_all_attributes();
+      assert(!attr4->parent());
+      assert(root->attributes().size() == 0);
+    }
+  }
+
   doc2->clear();
   stringstream ss3;
   ss3 << doc2;

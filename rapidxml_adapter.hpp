@@ -63,6 +63,11 @@ namespace rapidxml_adapter
 			m_value = _value;
 		}
 
+		void reset_parent()
+		{
+			m_parent.reset();
+		}
+
 	protected:
 		xml_base(const rapidxml::xml_base<Ch>* _base, std::weak_ptr<xml_node<Ch>> _parent)
 			: m_name(_base->name(), _base->name_size())
@@ -288,12 +293,14 @@ namespace rapidxml_adapter
 		void remove_first_node()
 		{
 			assert(m_children.size() > 0);
+			m_children.front()->reset_parent();
 			m_children.pop_front();
 		}
 
 		void remove_last_node()
 		{
 			assert(m_children.size() > 0);
+			m_children.back()->reset_parent();
 			m_children.pop_back();
 		}
 
@@ -304,6 +311,7 @@ namespace rapidxml_adapter
 			{
 				if ((*iter) == _where)
 				{
+					_where->reset_parent();
 					m_children.erase(iter);
 					break;
 				}
@@ -312,6 +320,10 @@ namespace rapidxml_adapter
 
 		void remove_all_nodes()
 		{
+			for(auto node : m_children)
+			{
+				node->reset_parent();
+			}
 			m_children.clear();
 		}
 
@@ -354,12 +366,14 @@ namespace rapidxml_adapter
 		void remove_first_attribute()
 		{
 			assert(m_attributes.size() > 0);
+			m_attributes.front()->reset_parent();
 			m_attributes.pop_front();
 		}
 
 		void remove_last_attribute()
 		{
 			assert(m_attributes.size() > 0);
+			m_attributes.back()->reset_parent();
 			m_attributes.pop_back();
 		}
 
@@ -370,6 +384,7 @@ namespace rapidxml_adapter
 			{
 				if((*iter) == _where)
 				{
+					_where->reset_parent();
 					m_attributes.erase(iter);
 					break;
 				}
@@ -378,6 +393,10 @@ namespace rapidxml_adapter
 
 		void remove_all_attributes()
 		{
+			for (auto attribute : m_attributes)
+			{
+				attribute->reset_parent();
+			}
 			m_attributes.clear();
 		}
 	protected:
